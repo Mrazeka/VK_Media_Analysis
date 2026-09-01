@@ -18,7 +18,7 @@
 * **Медиа-аналитики и социологи:** Для изучения общественных настроений и выявления скрытых трендов.
 
 
-### 🛠 Технологический стек
+###  Технологический стек
 * **Backend:** Python 3.10+, FastAPI, SQLAlchemy (Async), Pydantic.
 * **Database:** PostgreSQL .
 * **Machine Learning:** PyTorch, Hugging Face `Transformers` (Sentiment Analysis & LLM).
