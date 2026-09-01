@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Верхняя панель -->
+        <header class="header">
+            <nav class="breadcrumbs">
+                <a href="/" class="breadcrumb-link">Главная</a>
+                <span class="breadcrumb-separator">/</span>
+                <span class="breadcrumb-current">Настройки</span>
+            </nav>
+        </header>
+
+        <!-- Основной контент -->
+        <main class="main-content">
+            <h1>Настройки системы</h1>
+
+            <!-- Секция: Параметры API -->
+            <section class="settings-section">
+                <h2>Параметры подключения к API</h2>
+                <div class="form-group">
+                    <label>Хост API</label>
+                    <input type="text" id="api-host" readonly class="readonly-input">
+                </div>
+                <div class="form-group">
+                    <label>Порт API</label>
+                    <input type="text" id="api-port" readonly class="readonly-input">
+                </div>
+            </section>
+
+            <!-- Секция: Управление ML моделью -->
+            <section class="settings-section">
+                <h2>Управление ML моделью</h2>
+                <div class="model-status-card">
+                    <div class="status-indicator">
+                        <span class="status-dot" id="model-status-dot"></span>
+                        <span id="model-status-text">Загрузка статуса...</span>
+                    </div>
+                    <div class="model-actions">
+                        <button onclick="startModel()" class="btn btn-primary" id="btn-start-model">
+                            ▶️ Запустить модель
+                        </button>
+                        <button onclick="stopModel()" class="btn btn-danger" id="btn-stop-model">
+                            ⏹️ Остановить модель
+                        </button>
+                    </div>
+                </div>
+                <div id="model-operation-status" class="operation-status"></div>
+            </section>
+
+            <!-- Секция: Переменные окружения -->
+            <section class="settings-section">
+                <h2>Системные переменные</h2>
+                <div class="env-vars-list">
+                    <div class="env-var-item">
+                        <span class="env-var-name">DEBUG_MODE</span>
+                        <span class="env-var-value" id="env-debug-mode">-</span>
+                    </div>
+                    <div class="env-var-item">
+                        <span class="env-var-name">INTERFACE_HOST</span>
+                        <span class="env-var-value" id="env-interface-host">-</span>
+                    </div>
+                    <div class="env-var-item">
+                        <span class="env-var-name">INTERFACE_PORT</span>
+                        <span class="env-var-value" id="env-interface-port">-</span>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Уведомления -->
+    <div id="notification-container" class="notification-container"></div>
+
+    <script src="/static/js/main.js"></script>
+    <script src="/static/js/settings.js"></script>
+</body>
+</html>

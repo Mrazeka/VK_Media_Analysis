@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Верхняя панель -->
+        <header class="header">
+            <nav class="breadcrumbs">
+                <a href="/" class="breadcrumb-link">Главная</a>
+                <span class="breadcrumb-separator">/</span>
+                <a href="/projects" class="breadcrumb-link">Проекты</a>
+                <span class="breadcrumb-separator">/</span>
+                <span class="breadcrumb-current" id="breadcrumb-project-name">Проект #{{ project_id }}</span>
+            </nav>
+            <div class="header-actions">
+                <button onclick="window.location.href='/projects/{{ project_id }}/chats'" class="btn btn-secondary">
+                    💬 Чаты
+                </button>
+            </div>
+        </header>
+
+        <!-- Основной контент -->
+        <main class="main-content">
+            <div class="project-detail-header">
+                <h1 id="project-title">Загрузка...</h1>
+                <div class="project-actions">
+                    <button onclick="openEditProjectModal()" class="btn btn-secondary">✏️ Редактировать</button>
+                    <button onclick="confirmDeleteProject()" class="btn btn-danger">🗑️ Удалить</button>
+                </div>
+            </div>
+
+            <div class="project-info-grid">
+                <div class="info-card">
+                    <h3>Описание</h3>
+                    <p id="project-description">-</p>
+                </div>
+                <div class="info-card">
+                    <h3>Ключевые слова</h3>
+                    <p id="project-keywords">-</p>
+                </div>
+                <div class="info-card">
+                    <h3>Модель</h3>
+                    <p id="project-model">-</p>
+                </div>
+                <div class="info-card">
+                    <h3>Статистика</h3>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <span class="stat-value" id="stat-requests">0</span>
+                            <span class="stat-label">Запросов</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value" id="stat-posts">0</span>
+                            <span class="stat-label">Постов</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value" id="stat-comments">0</span>
+                            <span class="stat-label">Комментариев</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Секция поисковых запросов (1/4 экрана) -->
+            <section class="search-requests-section">
+                <div class="section-header">
+                    <h2>Поисковые запросы</h2>
+                    <div class="section-actions">
+                        <button onclick="openCommentsModal()" class="btn btn-secondary">💬 Комментарии проекта</button>
+                        <button onclick="openCreateRequestModal()" class="btn btn-primary">+ Добавить запрос</button>
+                    </div>
+                </div>
+
+                <!-- Кнопка создания запроса -->
+                <div class="request-card create-request-card" onclick="openCreateRequestModal()">
+                    <div class="request-content">
+                        <h3>+ Создать запрос</h3>
+                        <p>Нажмите для создания нового поискового запроса</p>
+                    </div>
+                </div>
+
+                <!-- Список запросов -->
+                <div id="search-requests-list" class="search-requests-list">
+                    <div class="loading-spinner">Загрузка запросов...</div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Модальное окно комментариев проекта -->
+    <div id="comments-modal" class="modal">
+        <div class="modal-content modal-large modal-comments">
+            <div class="modal-header">
+                <h2>Комментарии проекта</h2>
+                <button class="close-btn" onclick="closeModal('comments-modal')">&times;</button>
+            </div>
+            <div id="comments-list" class="comments-list">
+                <div class="loading-spinner">Загрузка комментариев...</div>
+            </div>
+            <div class="pagination-controls">
+                <span id="comments-page-info">Страница 1</span>
+                <div id="comments-pagination" class="pagination-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно редактирования проекта -->
+    <div id="edit-project-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Редактировать проект</h2>
+                <button class="close-btn" onclick="closeModal('edit-project-modal')">&times;</button>
+            </div>
+            <form id="edit-project-form" onsubmit="handleUpdateProject(event)">
+                <input type="hidden" id="edit-project-id">
+                <div class="form-group">
+                    <label for="edit-project-name">Название проекта *</label>
+                    <input type="text" id="edit-project-name" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit-project-description">Описание</label>
+                    <textarea id="edit-project-description" name="description" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="edit-project-keywords">Ключевые слова (через запятую)</label>
+                    <input type="text" id="edit-project-keywords" name="keywords">
+                </div>
+                <div class="form-group">
+                    <label for="edit-project-model">Модель</label>
+                    <input type="text" id="edit-project-model" name="model_name">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('edit-project-modal')">Отмена</button>
+                    <button type="submit" class="btn btn-primary">Сохранить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Модальное окно создания запроса -->
+    <div id="create-request-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Создать поисковый запрос</h2>
+                <button class="close-btn" onclick="closeModal('create-request-modal')">&times;</button>
+            </div>
+            <form id="create-request-form" onsubmit="handleCreateRequest(event)">
+                <div class="form-group">
+                    <label for="request-query">Текст запроса</label>
+                    <input type="text" id="request-query" name="query">
+                </div>
+                <div class="form-group">
+                    <label for="request-extended">Расширенная информация</label>
+                    <input type="checkbox" id="request-extended" name="extended">
+                </div>
+                <div class="form-group">
+                    <label for="request-count">Лимит записей (1-1000)</label>
+                    <input type="number" id="request-count" name="count" value="100" min="1" max="1000">
+                </div>
+                <div class="form-group">
+                    <label for="request-start-time">Время начала</label>
+                    <input type="datetime-local" id="request-start-time" name="start_time">
+                </div>
+                <div class="form-group">
+                    <label for="request-end-time">Время окончания</label>
+                    <input type="datetime-local" id="request-end-time" name="end_time">
+                </div>
+                <div class="form-group">
+                    <label for="request-params-json">Доп. параметры (JSON)</label>
+                    <textarea id="request-params-json" name="params_json" rows="3" placeholder='{"offset": 0}'></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('create-request-modal')">Отмена</button>
+                    <button type="submit" class="btn btn-primary">Создать</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Модальное окно редактирования запроса -->
+    <div id="edit-request-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Редактировать поисковый запрос</h2>
+                <button class="close-btn" onclick="closeModal('edit-request-modal')">&times;</button>
+            </div>
+            <form id="edit-request-form" onsubmit="handleUpdateRequest(event)">
+                <input type="hidden" id="edit-request-id">
+                <div class="form-group">
+                    <label for="edit-request-query">Текст запроса</label>
+                    <input type="text" id="edit-request-query" name="query">
+                </div>
+                <div class="form-group">
+                    <label for="edit-request-extended">Расширенная информация</label>
+                    <input type="checkbox" id="edit-request-extended" name="extended">
+                </div>
+                <div class="form-group">
+                    <label for="edit-request-count">Лимит записей (1-1000)</label>
+                    <input type="number" id="edit-request-count" name="count" min="1" max="1000">
+                </div>
+                <div class="form-group">
+                    <label for="edit-request-start-time">Время начала</label>
+                    <input type="datetime-local" id="edit-request-start-time" name="start_time">
+                </div>
+                <div class="form-group">
+                    <label for="edit-request-end-time">Время окончания</label>
+                    <input type="datetime-local" id="edit-request-end-time" name="end_time">
+                </div>
+                <div class="form-group">
+                    <label for="edit-request-params-json">Доп. параметры (JSON)</label>
+                    <textarea id="edit-request-params-json" name="params_json" rows="3"></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('edit-request-modal')">Отмена</button>
+                    <button type="submit" class="btn btn-primary">Сохранить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Модальное окно подтверждения удаления -->
+    <div id="delete-confirm-modal" class="modal">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h2>Подтверждение удаления</h2>
+                <button class="close-btn" onclick="closeModal('delete-confirm-modal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p id="delete-confirm-text">Вы уверены?</p>
+                <p class="warning-text">Это действие нельзя отменить.</p>
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('delete-confirm-modal')">Отмена</button>
+                <button type="button" class="btn btn-danger" id="confirm-delete-action-btn">Удалить</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно комментариев поискового запроса -->
+    <div id="request-comments-modal" class="modal">
+        <div class="modal-content modal-large modal-comments">
+            <div class="modal-header">
+                <h2>Комментарии запроса</h2>
+                <button class="close-btn" onclick="closeModal('request-comments-modal')">&times;</button>
+            </div>
+            <div id="request-comments-list" class="comments-list">
+                <div class="loading-spinner">Загрузка комментариев...</div>
+            </div>
+            <div class="pagination-controls">
+                <span id="request-comments-page-info">Страница 1</span>
+                <div id="request-comments-pagination" class="pagination-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Уведомления -->
+    <div id="notification-container" class="notification-container"></div>
+
+    <script src="/static/js/main.js"></script>
+    <script src="/static/js/project_detail.js"></script>
+</body>
+</html>

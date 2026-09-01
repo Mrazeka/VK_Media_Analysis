@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{Проекты мониторинга}</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Верхняя панель -->
+        <header class="header">
+            <nav class="breadcrumbs">
+                <a href="/" class="breadcrumb-link">Главная</a>
+                <span class="breadcrumb-separator">/</span>
+                <span class="breadcrumb-current">Проекты</span>
+            </nav>
+        </header>
+
+        <!-- Основной контент -->
+        <main class="main-content">
+            <h1>Список проектов</h1>
+            
+            <!-- Кнопка создания проекта -->
+            <div class="project-card create-project-card" onclick="openCreateProjectModal()">
+                <div class="card-content" style="width: 60%;">
+                    <h2>+ Создать проект</h2>
+                    <p>Нажмите для создания нового проекта</p>
+                </div>
+                <div class="card-actions" style="width: 40%;"></div>
+            </div>
+
+            <!-- Список проектов -->
+            <div id="projects-list" class="projects-list">
+                <!-- Проекты будут загружены через JS -->
+                <div class="loading-spinner">Загрузка проектов...</div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Модальное окно создания проекта -->
+    <div id="create-project-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Создать новый проект</h2>
+                <button class="close-btn" onclick="closeModal('create-project-modal')">&times;</button>
+            </div>
+            <form id="create-project-form" onsubmit="handleCreateProject(event)">
+                <div class="form-group">
+                    <label for="project-name">Название проекта *</label>
+                    <input type="text" id="project-name" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="project-description">Описание</label>
+                    <textarea id="project-description" name="description" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="project-keywords">Ключевые слова (через запятую)</label>
+                    <input type="text" id="project-keywords" name="keywords" placeholder="пример, слова, список">
+                </div>
+                <div class="form-group">
+                    <label for="project-model">Модель</label>
+                    <input type="text" id="project-model" name="model_name" placeholder="Название модели">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('create-project-modal')">Отмена</button>
+                    <button type="submit" class="btn btn-primary">Создать</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Модальное окно редактирования проекта -->
+    <div id="edit-project-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Редактировать проект</h2>
+                <button class="close-btn" onclick="closeModal('edit-project-modal')">&times;</button>
+            </div>
+            <form id="edit-project-form" onsubmit="handleUpdateProject(event)">
+                <input type="hidden" id="edit-project-id">
+                <div class="form-group">
+                    <label for="edit-project-name">Название проекта *</label>
+                    <input type="text" id="edit-project-name" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit-project-description">Описание</label>
+                    <textarea id="edit-project-description" name="description" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="edit-project-keywords">Ключевые слова (через запятую)</label>
+                    <input type="text" id="edit-project-keywords" name="keywords">
+                </div>
+                <div class="form-group">
+                    <label for="edit-project-model">Модель</label>
+                    <input type="text" id="edit-project-model" name="model_name">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('edit-project-modal')">Отмена</button>
+                    <button type="submit" class="btn btn-primary">Сохранить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Модальное окно подтверждения удаления -->
+    <div id="delete-confirm-modal" class="modal">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h2>Подтверждение удаления</h2>
+                <button class="close-btn" onclick="closeModal('delete-confirm-modal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Вы уверены, что хотите удалить этот проект?</p>
+                <p class="warning-text">Это действие нельзя отменить.</p>
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('delete-confirm-modal')">Отмена</button>
+                <button type="button" class="btn btn-danger" id="confirm-delete-btn">Удалить</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Уведомления -->
+    <div id="notification-container" class="notification-container"></div>
+
+    <script src="/static/js/main.js"></script>
+    <script src="/static/js/projects.js"></script>
+</body>
+</html>

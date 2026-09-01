@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Чаты проекта - VK Analytics</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Верхняя панель -->
+        <header class="header">
+            <nav class="breadcrumbs">
+                <a href="/" class="breadcrumb-link">Главная</a>
+                <span class="breadcrumb-separator">/</span>
+                <a href="/projects" class="breadcrumb-link">Проекты</a>
+                <span class="breadcrumb-separator">/</span>
+                <a href="/project/{{ project_id }}" class="breadcrumb-link" id="breadcrumb-project-name">Проект #{{ project_id }}</a>
+                <span class="breadcrumb-separator">/</span>
+                <span class="breadcrumb-current">Чаты</span>
+            </nav>
+        </header>
+
+        <!-- Основной контент -->
+        <main class="main-content">
+            <div class="chats-header">
+                <h1 id="page-title">Чаты проекта</h1>
+                <button onclick="openCreateChatModal()" class="btn btn-primary">+ Создать чат</button>
+            </div>
+
+            <!-- Информация о проекте -->
+            <div class="project-info-short" id="project-info">
+                <div class="loading-spinner">Загрузка информации...</div>
+            </div>
+
+            <!-- Список чатов -->
+            <div id="chats-list" class="chats-list">
+                <div class="loading-spinner">Загрузка чатов...</div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Модальное окно создания чата -->
+    <div id="create-chat-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Создать новый чат</h2>
+                <button class="close-btn" onclick="closeModal('create-chat-modal')">&times;</button>
+            </div>
+            <form id="create-chat-form" onsubmit="handleCreateChat(event)">
+                <div class="form-group">
+                    <label for="chat-title">Название чата *</label>
+                    <input type="text" id="chat-title" name="title" required placeholder="Например: Анализ отзывов">
+                </div>
+                <div class="form-group">
+                    <label for="chat-description">Описание</label>
+                    <textarea id="chat-description" name="description" rows="3" placeholder="Краткое описание целей чата"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="chat-max-context">Максимальная длина контекста (сообщений)</label>
+                    <input type="number" id="chat-max-context" name="max_context_length" value="0" min="0" max="50" 
+                           title="0 = не использовать историю, 1-50 = количество последних сообщений для контекста">
+                    <small class="form-hint">Сколько последних сообщений использовать как контекст (0 = только текущий запрос)</small>
+                </div>
+                <div class="form-group">
+                    <label>Фильтрация по запросам</label>
+                    <div id="chat-request-filters-container" class="checkbox-list" style="max-height: 200px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; border-radius: 4px;">
+                        <div class="loading-spinner">Загрузка запросов...</div>
+                    </div>
+                    <small class="form-hint">Отметьте запросы, комментарии из которых будут использоваться в чате</small>
+                </div>
+                <div class="form-group">
+                    <label for="chat-instructions-file">Файл с инструкциями</label>
+                    <select id="chat-instructions-file" name="instructions_file_path">
+                        <option value="">-- Без инструкций --</option>
+                    </select>
+                    <small class="form-hint">TXT-файл с дополнительными инструкциями для промта</small>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('create-chat-modal')">Отмена</button>
+                    <button type="submit" class="btn btn-primary">Создать</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Модальное окно настроек чата -->
+    <div id="edit-chat-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Настройки чата</h2>
+                <button class="close-btn" onclick="closeModal('edit-chat-modal')">&times;</button>
+            </div>
+            <form id="edit-chat-form" onsubmit="handleUpdateChat(event)">
+                <input type="hidden" id="edit-chat-id">
+                <div class="form-group">
+                    <label for="edit-chat-title">Название чата *</label>
+                    <input type="text" id="edit-chat-title" name="title" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit-chat-description">Описание</label>
+                    <textarea id="edit-chat-description" name="description" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="edit-chat-max-context">Максимальная длина контекста (сообщений)</label>
+                    <input type="number" id="edit-chat-max-context" name="max_context_length" min="0" max="50">
+                    <small class="form-hint">0 = не использовать историю, 1-50 = количество последних сообщений</small>
+                </div>
+                <div class="form-group">
+                    <label>Фильтрация по запросам</label>
+                    <div id="edit-chat-request-filters-container" class="checkbox-list" style="max-height: 200px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; border-radius: 4px;">
+                        <div class="loading-spinner">Загрузка запросов...</div>
+                    </div>
+                    <small class="form-hint">Отметьте запросы, комментарии из которых будут использоваться в чате</small>
+                </div>
+                <div class="form-group">
+                    <label for="edit-chat-instructions-file">Файл с инструкциями</label>
+                    <select id="edit-chat-instructions-file" name="instructions_file_path">
+                        <option value="">-- Без инструкций --</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('edit-chat-modal')">Отмена</button>
+                    <button type="submit" class="btn btn-primary">Сохранить</button>
+                    <button type="button" class="btn btn-danger" onclick="confirmDeleteChat()">🗑️ Удалить чат</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Модальное окно подтверждения удаления -->
+    <div id="delete-confirm-modal" class="modal">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h2>Подтверждение удаления</h2>
+                <button class="close-btn" onclick="closeModal('delete-confirm-modal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Вы уверены, что хотите удалить этот чат?</p>
+                <p class="warning-text">Все сообщения будут безвозвратно удалены.</p>
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('delete-confirm-modal')">Отмена</button>
+                <button type="button" class="btn btn-danger" id="confirm-delete-chat-btn">Удалить</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Уведомления -->
+    <div id="notification-container" class="notification-container"></div>
+
+    <script>
+        // Передаем project_id из шаблона в JavaScript
+        window.PROJECT_ID = {{ project_id }};
+    </script>
+    <script src="/static/js/main.js"></script>
+    <script src="/static/js/chats.js"></script>
+</body>
+</html>

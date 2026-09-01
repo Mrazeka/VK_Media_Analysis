@@ -1,0 +1,128 @@
+version: '3.8'
+
+services:
+  # ============================================================
+  # БАЗА ДАННЫХ
+  # ============================================================
+  db:
+    image: postgres:15
+    container_name: vk_analytics_db
+    environment:
+      POSTGRES_DB: vk_analytics
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+      - "5433:5432"
+    networks:
+      - vk_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d vk_analytics"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ============================================================
+  # ОСНОВНОЙ КОНТЕЙНЕР (API + Sentiment + LLM)
+  # ============================================================
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        HF_TOKEN: ${HF_TOKEN}
+    container_name: vk_analytics_app
+    ports:
+      - "8000:8000"  # Основное API (VK, Posts, Projects)
+      - "8001:8001"  # LLM сервис (чат, аналитика)
+      - "8550:8550"  # Интерфейс Flet (веб-доступ)
+    env_file:
+      - .env
+    environment:
+      # База данных
+      DATABASE_URL: ${DATABASE_URL:-postgresql://user:password@db:5432/vk_analytics}
+
+      # VK API
+      VK_ACCESS_TOKEN: ${VK_ACCESS_TOKEN}
+
+      # Python настройки
+      PYTHONUNBUFFERED: 1
+
+      # Настройки LLM
+      MODEL_NAME: ${MODEL_NAME:-Qwen/Qwen2.5-7B-Instruct}
+      MODEL_PATH: /app/models/qwen2.5-7b-instruct
+      MAX_CONTEXT_LENGTH: 32000
+      HF_TOKEN: ${HF_TOKEN}
+
+      # Настройки Sentiment
+      SENTIMENT_MODEL: blanchefort/rubert-base-cased-sentiment-rusentiment
+
+      # Кэш моделей
+      CACHE_DIR:  /app/models/cache
+
+      # LLM Service URL
+      LLM_SERVICE_URL: http://vk_analytics_app:8001
+      
+      # Интерфейс
+      INTERFACE_HOST: 0.0.0.0
+      INTERFACE_PORT: 8550
+    volumes:
+      - model_cache:/app/models/cache
+      - hf_cache:/root/.cache/huggingface
+      - app_logs:/var/log/vk_analytics
+      - ./logs_host:/var/log/vk_analytics
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - vk_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+# СЕРВИС ЛОГГЕРА (отдельный контейнер для доступа к логам)
+
+  log_keeper:
+    image: alpine:latest
+    container_name: vk_analytics_log_keeper
+    command: tail -f /dev/null
+    volumes:
+      - ./logs_host:/var/log/vk_analytics
+    networks:
+      - vk_network
+    restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 16M
+          cpus: '0.01'
+
+# ============================================================
+# ТОМА
+# ============================================================
+volumes:
+  postgres_data:
+  hf_cache:
+  model_cache:
+  app_logs:
+# ============================================================
+# СЕТИ
+# ============================================================
+networks:
+  vk_network:
+    driver: bridge
+
+
+

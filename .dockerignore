@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+
+# Docker
+.dockerignore
+Dockerfile
+Dockerfile.*
+docker-compose*.yml
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Git
+.git/
+.gitignore
+
+# Models (монтируются через volume)
+models/
+*.gguf
+*.bin
+
+# Logs
+*.log
+logs/
+
+# Database
+*.db
+*.sqlite
+
+# Hugging Face cache (монтируется через volume)
+.cache/
+context

@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Чат - VK Analytics</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Верхняя панель -->
+        <header class="header">
+            <nav class="breadcrumbs">
+                <a href="/" class="breadcrumb-link">Главная</a>
+                <span class="breadcrumb-separator">/</span>
+                <a href="/projects" class="breadcrumb-link">Проекты</a>
+                <span class="breadcrumb-separator">/</span>
+                <a href="#" class="breadcrumb-link" id="breadcrumb-project-name">Проект</a>
+                <span class="breadcrumb-separator">/</span>
+                <a href="#" class="breadcrumb-link" id="breadcrumb-chats-list">Чаты</a>
+                <span class="breadcrumb-separator">/</span>
+                <span class="breadcrumb-current" id="breadcrumb-chat-title">Чат #{{ chat_id }}</span>
+            </nav>
+            <div class="header-actions">
+                <button onclick="goBackToChats()" class="btn btn-secondary" id="back-to-chats-btn">← К списку чатов</button>
+            </div>
+        </header>
+
+        <!-- Основной контент -->
+        <main class="main-content chat-main">
+            <div class="chat-container">
+                <!-- Заголовок чата -->
+                <div class="chat-header-info">
+                    <h1 id="chat-title">Загрузка...</h1>
+                    <p id="chat-description" class="chat-desc"></p>
+                    <div id="model-status-indicator" class="model-status" style="display: none;">
+                        <span class="status-dot"></span>
+                        <span class="status-text"></span>
+                    </div>
+                </div>
+
+                <!-- Область сообщений -->
+                <div id="chat-messages" class="chat-messages">
+                    <div class="loading-spinner">Загрузка истории чата...</div>
+                </div>
+
+                <!-- Область ввода сообщения -->
+                <div class="chat-input-area">
+                    <div class="input-controls">
+                        <textarea 
+                            id="message-input" 
+                            placeholder="Введите ваш вопрос..." 
+                            rows="3"
+                            onkeydown="handleKeyDown(event)"
+                        ></textarea>
+                        
+                        <!-- Дополнительные фильтры -->
+                        <div class="manual-filters-section">
+                            <button type="button" class="btn-filter-toggle" onclick="toggleManualFilters()">
+                                🔧 Фильтры
+                            </button>
+                            <div id="manual-filters-panel" class="manual-filters-panel" style="display: none;">
+                                <div class="filter-row">
+                                    <label>Тональность:</label>
+                                    <select id="filter-sentiment">
+                                        <option value="">Любая</option>
+                                        <option value="POSITIVE">Позитивная</option>
+                                        <option value="NEGATIVE">Негативная</option>
+                                        <option value="NEUTRAL">Нейтральная</option>
+                                    </select>
+                                </div>
+                                <div class="filter-row">
+                                    <label>Ключевые слова:</label>
+                                    <input type="text" id="filter-keywords" placeholder="баг, проблема...">
+                                </div>
+                                <div class="filter-row">
+                                    <label>Мин. лайков:</label>
+                                    <input type="number" id="filter-min-likes" min="0" placeholder="0">
+                                </div>
+                                <div class="filter-row">
+                                    <label>Сортировка:</label>
+                                    <select id="filter-sort">
+                                        <option value="">По умолчанию</option>
+                                        <option value="date">По дате</option>
+                                        <option value="likes_count">По лайкам</option>
+                                        <option value="comments_count">По комментариям</option>
+                                    </select>
+                                </div>
+                                <div class="filter-row">
+                                    <label>Лимит:</label>
+                                    <input type="number" id="filter-limit" min="1" max="500" placeholder = "0">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="send-buttons-container">
+                            <button onclick="sendEnhancedMessage()" class="btn btn-secondary btn-send" id="enhanced-send-btn" title="Расширенная обработка с пакетной фильтрацией">
+                                🔄 Отправить
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Индикатор загрузки модели (скрыт по умолчанию, показывается только при отправке сообщения) -->
+                    <div id="model-loading-indicator" class="model-loading-indicator" style="display: none;">
+                        <div class="loading-animation">
+                            <div class="spinner"></div>
+                            <div class="loading-text">
+                                <strong>Модель загружается...</strong>
+                                <p>Это может занять несколько минут при первом запуске</p>
+                                <div class="loading-progress">
+                                    <div class="progress-bar"></div>
+                                </div>
+                                <p class="loading-hint">Статус: <span id="loading-status">Загрузка модели...</span></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Модальное окно настроек чата -->
+    <div id="chat-settings-modal" class="modal">
+        <div class="modal-content">
+
+            <form id="chat-settings-form" onsubmit="handleUpdateChatSettings(event)">
+                <div class="form-group">
+                    <label for="settings-title">Название чата *</label>
+                    <input type="text" id="settings-title" name="title" required>
+                </div>
+                <div class="form-group">
+                    <label for="settings-description">Описание</label>
+                    <textarea id="settings-description" name="description" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="settings-max-context">Максимальная длина контекста (сообщений)</label>
+                    <input type="number" id="settings-max-context" name="max_context_length" min="0" max="50">
+                    <small class="form-hint">0 = не использовать историю, 1-50 = количество последних сообщений</small>
+                </div>
+                <div class="form-group">
+                    <label for="settings-request-filters">Фильтрация по запросам</label>
+                    <div id="settings-request-filters-container" style="max-height: 200px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; border-radius: 4px;">
+                        <!-- Чекбоксы будут загружены через JavaScript -->
+                    </div>
+                    <small class="form-hint">Отметьте запросы, которые следует использовать для фильтрации</small>
+                </div>
+                <div class="form-group">
+                    <label for="settings-instructions-file">Файл с инструкциями</label>
+                    <select id="settings-instructions-file" name="instructions_file_path">
+                        <option value="">-- Без инструкций --</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('chat-settings-modal')">Отмена</button>
+                    <button type="submit" class="btn btn-primary">Сохранить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Уведомления -->
+    <div id="notification-container" class="notification-container"></div>
+
+    <script src="/static/js/main.js"></script>
+    <script src="/static/js/chat_detail.js"></script>
+</body>
+</html>
